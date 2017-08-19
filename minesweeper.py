@@ -1,6 +1,7 @@
 import random
 from tkinter import *
 from tkinter import messagebox
+import sys
 class minesweeper_cell(Label):
     def __init__(self, master, text, row, column):
         Label.__init__(self, master, text="", relief=RAISED, width=2, bg="white")
@@ -40,6 +41,9 @@ class minesweeper_cell(Label):
                 self.master.freeze(True)
     def get_text(self):
         return self.text
+    def get_clicked(self):
+        return self.isClicked
+
 
 class minesweeper_grid(Frame):
     def __init__(self, master, string_grid, height, width, numBombs):
@@ -51,7 +55,7 @@ class minesweeper_grid(Frame):
         self.numBombsleft=IntVar()
         self.numBombsleft.set(numBombs)
         self.tk_grid={}
-        self.numBombLabel=Label(self,textvariable=self.numBombsleft, fg="white", bg="black").grid(row=height,column=5, columnspan=2)
+        self.numBombLabel=Label(self,textvariable=self.numBombsleft, fg="white", bg="black").grid(row=height, columnspan=width)
         for i in range(height):
             for x in range(width):
                 self.tk_grid[(i,x)]=minesweeper_cell(self,self.str_grid[(i,x)],i,x)
@@ -63,7 +67,8 @@ class minesweeper_grid(Frame):
             self.numBombsleft.set(self.numBombsleft.get()+1)
     def expose(self, isBomb, text, row, column):
         if isBomb:
-            self.gameOver()
+            self.gameLost()
+            return
         if text=="":
             for a in [-1, 0, 1]:
                 for b in [-1, 0, 1]:
@@ -72,17 +77,35 @@ class minesweeper_grid(Frame):
                             self.tk_grid[(row+a,column+b)].expose(a)    
                     except KeyError:
                         pass
+        for i in self.tk_grid:
+            if self.tk_grid[i].get_clicked()==False and self.tk_grid[i].get_text()!="*":
+                return
+        self.gameWon()
+        sys.exit()
 
-    def gameOver(self):
+    def gameLost(self):
         messagebox.showerror('Minesweeper','KABOOM! You lose.',parent=self)
         for i in self.tk_grid:
             if self.tk_grid[i].get_text()=="*":
                 self.tk_grid[i].config(relief=RAISED, bg="red", text="*")
             self.tk_grid[i].isFrozen=True
+    def gameWon(self):
+        messagebox.showinfo('Minesweeper','Congratulations -- you won!',parent=self)
 
 def play_minesweeper(width, height, numBombs):
     scells={}
     tkcells={}
+    sys.setrecursionlimit(width*height*3)
+    #this is to make sure it never has a recursion depth error.
+    if numBombs<0:
+        print("Please use a posiive number of bombs")
+        return
+    if width<0 or height<0:
+        print("Please use a positive height and width")
+        return
+    if width*height<numBombs:
+        print("Please do not put in more bombs then squares")
+        return
     for i in range(height):
         for x in range(width):
             scells[(i,x)]=""
@@ -110,4 +133,3 @@ def play_minesweeper(width, height, numBombs):
     root=Tk()
     game=minesweeper_grid(root, scells, height, width, numBombs)
     game.mainloop()
-play_minesweeper(12,10,15)
