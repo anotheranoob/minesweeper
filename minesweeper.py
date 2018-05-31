@@ -49,6 +49,7 @@ class minesweeper_grid(Frame):
     def __init__(self, master, string_grid, height, width, numBombs):
         Frame.__init__(self, master)
         self.pack()
+        self.master = master
         self.str_grid=string_grid
         self.height=height
         self.width=width
@@ -68,6 +69,7 @@ class minesweeper_grid(Frame):
     def expose(self, isBomb, text, row, column):
         if isBomb:
             self.gameLost()
+            self.master.destroy()
             return
         if text=="":
             for a in [-1, 0, 1]:
@@ -81,7 +83,7 @@ class minesweeper_grid(Frame):
             if self.tk_grid[i].get_clicked()==False and self.tk_grid[i].get_text()!="*":
                 return
         self.gameWon()
-        sys.exit()
+        self.master.destroy()
 
     def gameLost(self):
         messagebox.showerror('Minesweeper','KABOOM! You lose.',parent=self)
@@ -133,3 +135,5 @@ def play_minesweeper(width, height, numBombs):
     root=Tk()
     game=minesweeper_grid(root, scells, height, width, numBombs)
     game.mainloop()
+
+play_minesweeper(20, 20, 40)
